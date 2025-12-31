@@ -1,12 +1,16 @@
 using System;
 using System.Numerics;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Plugin.Services;
 
 namespace RecCue.Windows;
 
 public class RecIndicator : IDisposable
 {
     private readonly RecCuePlugin plugin;
+    private readonly IClientState clientState;
+    private readonly ICondition condition;
 
     private bool _isRecordingActive;
     private bool _wasFolderInError;
@@ -14,9 +18,11 @@ public class RecIndicator : IDisposable
     private bool _dragging;
     private Vector2 _dragOffset;
 
-    public RecIndicator(RecCuePlugin plugin)
+    public RecIndicator(RecCuePlugin plugin, IClientState clientState, ICondition condition)
     {
         this.plugin = plugin;
+        this.clientState = clientState;
+        this.condition = condition;
         plugin.RecordingLogic.RecordingStateChanged += OnRecordingStateChanged;
         _isRecordingActive = plugin.RecordingLogic.IsRecordingActive;
     }
@@ -24,6 +30,29 @@ public class RecIndicator : IDisposable
     public void Dispose()
     {
         plugin.RecordingLogic.RecordingStateChanged -= OnRecordingStateChanged;
+    }
+
+    private bool IsInValidGameplayState()
+    {
+        if (!clientState.IsLoggedIn)
+            return false;
+
+        if (clientState.IsGPosing)
+            return false;
+
+        if (condition[ConditionFlag.WatchingCutscene] ||
+            condition[ConditionFlag.WatchingCutscene78] ||
+            condition[ConditionFlag.OccupiedInCutSceneEvent])
+            return false;
+
+        if (condition[ConditionFlag.BetweenAreas] ||
+            condition[ConditionFlag.BetweenAreas51])
+            return false;
+
+        if (condition[ConditionFlag.CreatingCharacter])
+            return false;
+
+        return true;
     }
 
     private void OnRecordingStateChanged(bool isActive) => _isRecordingActive = isActive;
@@ -88,6 +117,9 @@ public class RecIndicator : IDisposable
 
     public void Draw()
     {
+        if (!IsInValidGameplayState())
+            return;
+
         var localPos = plugin.Configuration.IndicatorPosition;
         var scale = plugin.Configuration.IndicatorScale;
         var size = new Vector2(100 * scale, 40 * scale);

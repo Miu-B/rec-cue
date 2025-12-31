@@ -15,6 +15,8 @@ public sealed class RecCuePlugin : IDalamudPlugin
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
+    [PluginService] internal static IClientState ClientState { get; private set; } = null!;
+    [PluginService] internal static ICondition Condition { get; private set; } = null!;
 
     private const string CommandName = "/reccue";
 
@@ -41,7 +43,7 @@ public sealed class RecCuePlugin : IDalamudPlugin
         FileWatcher.FileActivityDetected += RecordingLogic.OnFileActivityDetected;
 
         ConfigWindow = new RecCueConfigWindow(this);
-        Indicator = new RecIndicator(this);
+        Indicator = new RecIndicator(this, ClientState, Condition);
 
         // Create font handle for sharp indicator text
         EnsureRecIndicatorFont();
