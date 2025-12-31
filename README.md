@@ -1,5 +1,7 @@
 # Rec-Cue
 
+![rec-cue icon](rec-cue/rec-cue.png)
+
 A Dalamud plugin that monitors a configurable folder for recording file activity and shows an in-game recording indicator when capture is likely active.
 
 ## Features
