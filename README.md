@@ -1,8 +1,5 @@
 # Rec-Cue
 
-[![Use This Template badge](https://img.shields.io/badge/Use%20This%20Template-0?logo=github&labelColor=grey)][new-repo]
-
-
 A Dalamud plugin that monitors a configurable folder for recording file activity and shows an in-game recording indicator when capture is likely active.
 
 ## Features
@@ -13,12 +10,11 @@ A Dalamud plugin that monitors a configurable folder for recording file activity
   * Adjustable inactivity timeout (default: 5 seconds)
 
 * **Visual Recording Indicator**
-  * Always-visible on-screen indicator (80x40 pixels)
+  * Always-visible on-screen indicator
   * **Active** (Red pulsing dot): File activity detected within 5 seconds
   * **OnHold** (Grey dot): No activity for 5+ seconds
   * **Error** (Orange dot): No folder configured or folder doesn't exist
   * Adjustable indicator position and scale (0.5x - 2.0x)
-  * Lock indicator position to prevent accidental movement
   * Auto-restart monitoring when folder error is resolved
 
 * **Simple Configuration**
@@ -36,7 +32,7 @@ A Dalamud plugin that monitors a configurable folder for recording file activity
 4. The indicator will appear on screen:
    * **Red pulsing** = Recording in progress (file activity detected within 5 seconds)
    * **Grey** = No recording activity
-   * **Orange** = No folder configured
+   * **Orange** = No folder configured or non existing
 
 ### Adjusting Indicator
 
@@ -44,12 +40,6 @@ A Dalamud plugin that monitors a configurable folder for recording file activity
 2. While the configuration window is open, drag the indicator to your desired position
 3. Use the "Indicator Scale" slider to adjust size
 4. Position is saved automatically when you finish dragging
-
-### Building
-
-1. Open `rec-cue.sln` in Visual Studio 2022 or JetBrains Rider
-2. Build the solution (Debug or Release)
-3. The resulting plugin DLL will be at `rec-cue/bin/x64/Debug/rec-cue.dll` (or Release)
 
 ### Loading in Dalamud
 
@@ -64,20 +54,7 @@ A Dalamud plugin that monitors a configurable folder for recording file activity
 All settings are saved automatically:
 
 * **Monitored Folder** - Path to the folder being monitored for file activity
-* **Indicator Position** - Screen position of the recording indicator (X, Y)
 * **Indicator Scale** - Scale multiplier for the indicator (0.5x to 2.0x)
-
-## Troubleshooting
-
-**Indicator not showing:**
-* Ensure a folder is configured in the settings
-* Check `/xllog` for any error messages
-* Verify the plugin is enabled in `/xlplugins`
-
-**Indicator not detecting recording:**
-* Verify the monitored folder path is correct
-* Check that your recording software is actually writing files
-* Ensure the folder exists and is accessible
 
 ## License
 
@@ -86,5 +63,3 @@ AGPL-3.0-or-later
 ## Credits
 
 Based on [SamplePlugin](https://github.com/goatcorp/SamplePlugin) template by goatcorp
-
-[new-repo]: https://github.com/new?template_name=SamplePlugin&template_owner=goatcorp
