@@ -28,7 +28,7 @@ A Dalamud plugin that monitors a configurable folder for recording file activity
 
 Rec-Cue is not yet available in the standard Dalamud plugin repository and must be installed from a third-party repository.
 
-Here is the URL for the plugin repository: `https://raw.githubusercontent.com/Miu-B/rec-cue/main/repo.json`
+Here is the URL for the plugin repository: `https://raw.githubusercontent.com/Miu-B/rec-cue/master/repo.json`
 
 To install:
 1. Open Dalamud Settings (`/xlsettings`)
