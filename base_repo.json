@@ -17,6 +17,6 @@
         "DownloadLinkInstall": "https://github.com/Miu-B/rec-cue/releases/download/1.0.0.0/rec-cue.zip",
         "DownloadLinkTesting": "https://github.com/Miu-B/rec-cue/releases/download/1.0.0.0/rec-cue.zip",
         "DownloadLinkUpdate": "https://github.com/Miu-B/rec-cue/releases/download/1.0.0.0/rec-cue.zip",
-        "IconUrl": "https://raw.githubusercontent.com/Miu-B/rec-cue/main/rec-cue/rec-cue.png"
+        "IconUrl": "https://raw.githubusercontent.com/Miu-B/rec-cue/master/rec-cue/rec-cue.png"
     }
 ]
