@@ -1,0 +1,138 @@
+using System;
+using Dalamud.Game.Command;
+using Dalamud.IoC;
+using Dalamud.Plugin;
+using Dalamud.Interface.Windowing;
+using Dalamud.Plugin.Services;
+using Dalamud.Interface.FontIdentifier;
+using Dalamud.Interface.ManagedFontAtlas;
+using RecCue.Windows;
+
+namespace RecCue;
+
+public sealed class RecCuePlugin : IDalamudPlugin
+{
+    [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
+    [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
+    [PluginService] internal static IPluginLog Log { get; private set; } = null!;
+
+    private const string CommandName = "/reccue";
+
+    public RecCueConfiguration Configuration { get; init; }
+
+    public readonly WindowSystem WindowSystem = new("RecCue");
+    internal RecCueConfigWindow ConfigWindow { get; init; }
+    internal RecIndicator Indicator { get; init; }
+    public FileWatcherService FileWatcher { get; private set; } = null!;
+    public RecordingDetectionLogic RecordingLogic { get; private set; } = null!;
+
+    // Crisp font for the indicator (resized default font)
+    internal IFontHandle RecIndicatorFont { get; private set; } = null!;
+    private bool _ownsRecIndicatorFont;
+    private float _lastFontMultiplier = -1f;
+
+    public RecCuePlugin()
+    {
+        Configuration = PluginInterface.GetPluginConfig() as RecCueConfiguration ?? new RecCueConfiguration();
+
+        FileWatcher = new FileWatcherService();
+        RecordingLogic = new RecordingDetectionLogic();
+
+        FileWatcher.FileActivityDetected += RecordingLogic.OnFileActivityDetected;
+
+        ConfigWindow = new RecCueConfigWindow(this);
+        Indicator = new RecIndicator(this);
+
+        // Create font handle for sharp indicator text
+        EnsureRecIndicatorFont();
+
+        if (!string.IsNullOrEmpty(Configuration.MonitoredFolderPath))
+            StartMonitoring();
+
+        WindowSystem.AddWindow(ConfigWindow);
+
+        CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
+        {
+            HelpMessage = "Open/close the rec-cue configuration window"
+        });
+
+        PluginInterface.UiBuilder.Draw += DrawUi;
+        PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
+
+        Log.Information("===rec-cue plugin loaded successfully===");
+    }
+
+    public void Dispose()
+    {
+        PluginInterface.UiBuilder.Draw -= DrawUi;
+        PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUi;
+
+        WindowSystem.RemoveAllWindows();
+
+        ConfigWindow.Dispose();
+        Indicator.Dispose();
+
+        FileWatcher.Dispose();
+        RecordingLogic.Dispose();
+
+        CommandManager.RemoveHandler(CommandName);
+
+        if (_ownsRecIndicatorFont)
+            RecIndicatorFont.Dispose();
+    }
+
+    private void OnCommand(string command, string args) => ConfigWindow.Toggle();
+
+    public void ToggleConfigUi() => ConfigWindow.Toggle();
+
+    public void StartMonitoring()
+    {
+        FileWatcher.StopMonitoring();
+        if (!string.IsNullOrEmpty(Configuration.MonitoredFolderPath) &&
+            System.IO.Directory.Exists(Configuration.MonitoredFolderPath))
+        {
+            FileWatcher.StartMonitoring(Configuration.MonitoredFolderPath);
+        }
+    }
+
+    private void DrawUi()
+    {
+        // Rebuild font if user changed IndicatorScale in your config
+        EnsureRecIndicatorFont();
+
+        WindowSystem.Draw();
+        Indicator.Draw();
+    }
+
+    private void EnsureRecIndicatorFont()
+    {
+        // Your old code did: fontSize = GetFontSize() * 1.8f * scale;
+        // Here we bake that into the atlas so it stays crisp.
+        var multiplier = 1.8f * Configuration.IndicatorScale;
+
+        if (RecIndicatorFont != null && MathF.Abs(multiplier - _lastFontMultiplier) < 0.01f)
+            return;
+
+        if (_ownsRecIndicatorFont && RecIndicatorFont != null)
+        {
+            RecIndicatorFont.Dispose();
+            _ownsRecIndicatorFont = false;
+        }
+
+        _lastFontMultiplier = multiplier;
+
+        if (PluginInterface.UiBuilder.DefaultFontSpec is SingleFontSpec spec)
+        {
+            var scaledSpec = spec with { SizePx = spec.SizePx * multiplier };
+            RecIndicatorFont = scaledSpec.CreateFontHandle(PluginInterface.UiBuilder.FontAtlas);
+            _ownsRecIndicatorFont = true;
+        }
+        else
+        {
+            // Fallback (should be rare): keep using default handle
+            RecIndicatorFont = PluginInterface.UiBuilder.DefaultFontHandle;
+            _ownsRecIndicatorFont = false;
+        }
+    }
+}
+

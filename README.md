@@ -1,76 +1,90 @@
-> ⚠️ **Don't click Fork!**
-> 
-> This is a GitHub Template repo. If you want to use this for a plugin, [use this template][new-repo] to make a new repo!
->
-> ![image](https://github.com/goatcorp/SamplePlugin/assets/16760685/d9732094-e1ed-4769-a70b-58ed2b92580c)
-
-# SamplePlugin
+# Rec-Cue
 
 [![Use This Template badge](https://img.shields.io/badge/Use%20This%20Template-0?logo=github&labelColor=grey)][new-repo]
 
 
-Simple example plugin for Dalamud.
+A Dalamud plugin that monitors a configurable folder for recording file activity and shows an in-game recording indicator when capture is likely active.
 
-This is not designed to be the simplest possible example, but it is also not designed to cover everything you might want to do. For more detailed questions, come ask in [the Discord](https://discord.gg/holdshift).
+## Features
 
-## Main Points
+* **File Activity Monitoring**
+  * Monitors a folder for file write/modification activity
+  * Recursive monitoring of subdirectories
+  * Adjustable inactivity timeout (default: 5 seconds)
 
-* Simple functional plugin
-  * Slash command
-  * Main UI
-  * Settings UI
-  * Image loading
-  * Plugin json
-* Simple, slightly-improved plugin configuration handling
-* Project organization
-  * Copies all necessary plugin files to the output directory
-    * Does not copy dependencies that are provided by dalamud
-    * Output directory can be zipped directly and have exactly what is required
-  * Hides data files from visual studio to reduce clutter
-    * Also allows having data files in different paths than VS would usually allow if done in the IDE directly
+* **Visual Recording Indicator**
+  * Always-visible on-screen indicator (80x40 pixels)
+  * **Active** (Red pulsing dot): File activity detected within 5 seconds
+  * **OnHold** (Grey dot): No activity for 5+ seconds
+  * **Error** (Orange dot): No folder configured or folder doesn't exist
+  * Adjustable indicator position and scale (0.5x - 2.0x)
+  * Lock indicator position to prevent accidental movement
+  * Auto-restart monitoring when folder error is resolved
 
-
-The intention is less that any of this is used directly in other projects, and more to show how similar things can be done.
+* **Simple Configuration**
+  * Built-in folder picker dialog
+  * Real-time validation
+  * Persistent configuration
 
 ## How To Use
 
 ### Getting Started
 
-To begin, [clone this template repository][new-repo] to your own GitHub account. This will automatically bring in everything you need to get a jumpstart on development. You do not need to fork this repository unless you intend to contribute modifications to it.
+1. Build the plugin and load it in Dalamud
+2. Open the configuration window using `/reccue` command
+3. Click "Browse..." to select a folder to monitor (e.g., your recording software's output folder)
+4. The indicator will appear on screen:
+   * **Red pulsing** = Recording in progress (file activity detected within 5 seconds)
+   * **Grey** = No recording activity
+   * **Orange** = No folder configured
 
-Be sure to also check out the [Dalamud Developer Docs][dalamud-docs] for helpful information about building your own plugin. The Developer Docs includes helpful information about all sorts of things, including [how to submit][submit] your newly-created plugin to the official repository. Assuming you use this template repository, the provided project build configuration and license are already chosen to make everything a breeze.
+### Adjusting Indicator
 
-[new-repo]: https://github.com/new?template_name=SamplePlugin&template_owner=goatcorp
-[dalamud-docs]: https://dalamud.dev
-[submit]: https://dalamud.dev/plugin-publishing/submission
-
-### Prerequisites
-
-SamplePlugin assumes all the following prerequisites are met:
-
-* XIVLauncher, FINAL FANTASY XIV, and Dalamud have all been installed and the game has been run with Dalamud at least once.
-* XIVLauncher is installed to its default directories and configurations.
-  * If a custom path is required for Dalamud's dev directory, it must be set with the `DALAMUD_HOME` environment variable.
-* A .NET Core 8 SDK has been installed and configured, or is otherwise available. (In most cases, the IDE will take care of this.)
+1. Open the configuration window with `/reccue`
+2. While the configuration window is open, drag the indicator to your desired position
+3. Use the "Indicator Scale" slider to adjust size
+4. Position is saved automatically when you finish dragging
 
 ### Building
 
-1. Open up `SamplePlugin.sln` in your C# editor of choice (likely [Visual Studio 2022](https://visualstudio.microsoft.com) or [JetBrains Rider](https://www.jetbrains.com/rider/)).
-2. Build the solution. By default, this will build a `Debug` build, but you can switch to `Release` in your IDE.
-3. The resulting plugin can be found at `SamplePlugin/bin/x64/Debug/SamplePlugin.dll` (or `Release` if appropriate.)
+1. Open `rec-cue.sln` in Visual Studio 2022 or JetBrains Rider
+2. Build the solution (Debug or Release)
+3. The resulting plugin DLL will be at `rec-cue/bin/x64/Debug/rec-cue.dll` (or Release)
 
-### Activating in-game
+### Loading in Dalamud
 
-1. Launch the game and use `/xlsettings` in chat or `xlsettings` in the Dalamud Console to open up the Dalamud settings.
-    * In here, go to `Experimental`, and add the full path to the `SamplePlugin.dll` to the list of Dev Plugin Locations.
-2. Next, use `/xlplugins` (chat) or `xlplugins` (console) to open up the Plugin Installer.
-    * In here, go to `Dev Tools > Installed Dev Plugins`, and the `SamplePlugin` should be visible. Enable it.
-3. You should now be able to use `/pmycommand` (chat) or `pmycommand` (console)!
+1. Launch the game and use `/xlsettings` to open Dalamud settings
+2. Go to `Experimental` and add the full path to `rec-cue.dll` to Dev Plugin Locations
+3. Use `/xlplugins` to open the Plugin Installer
+4. Go to `Dev Tools > Installed Dev Plugins` and enable rec-cue
+5. Use `/reccue` to open the configuration window
 
-Note that you only need to add it to the Dev Plugin Locations once (Step 1); it is preserved afterwards. You can disable, enable, or load your plugin on startup through the Plugin Installer.
+## Configuration
 
-### Reconfiguring for your own uses
+All settings are saved automatically:
 
-Replace all references to `SamplePlugin` in all the files and filenames with your desired name, then start building the plugin of your dreams. You'll figure it out 😁
+* **Monitored Folder** - Path to the folder being monitored for file activity
+* **Indicator Position** - Screen position of the recording indicator (X, Y)
+* **Indicator Scale** - Scale multiplier for the indicator (0.5x to 2.0x)
 
-Dalamud will load the JSON file (by default, `SamplePlugin/SamplePlugin.json`) next to your DLL and use it for metadata, including the description for your plugin in the Plugin Installer. Make sure to update this with information relevant to _your_ plugin!
+## Troubleshooting
+
+**Indicator not showing:**
+* Ensure a folder is configured in the settings
+* Check `/xllog` for any error messages
+* Verify the plugin is enabled in `/xlplugins`
+
+**Indicator not detecting recording:**
+* Verify the monitored folder path is correct
+* Check that your recording software is actually writing files
+* Ensure the folder exists and is accessible
+
+## License
+
+AGPL-3.0-or-later
+
+## Credits
+
+Based on [SamplePlugin](https://github.com/goatcorp/SamplePlugin) template by goatcorp
+
+[new-repo]: https://github.com/new?template_name=SamplePlugin&template_owner=goatcorp
