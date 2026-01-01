@@ -55,7 +55,7 @@ public sealed class RecCuePlugin : IDalamudPlugin
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
-            HelpMessage = "Open/close the rec-cue configuration window"
+            HelpMessage = "Show/hide the indicator or open the configuration window. Options: show, hide"
         });
 
         PluginInterface.UiBuilder.Draw += DrawUi;
@@ -83,7 +83,27 @@ public sealed class RecCuePlugin : IDalamudPlugin
             RecIndicatorFont.Dispose();
     }
 
-    private void OnCommand(string command, string args) => ConfigWindow.Toggle();
+    private void OnCommand(string command, string args)
+    {
+        var trimmedArgs = args.Trim().ToLower();
+
+        if (trimmedArgs == "show")
+        {
+            Configuration.HideIndicator = false;
+            Configuration.Save();
+            Log.Information("Indicator shown");
+        }
+        else if (trimmedArgs == "hide")
+        {
+            Configuration.HideIndicator = true;
+            Configuration.Save();
+            Log.Information("Indicator hidden");
+        }
+        else
+        {
+            ConfigWindow.Toggle();
+        }
+    }
 
     public void ToggleConfigUi() => ConfigWindow.Toggle();
 

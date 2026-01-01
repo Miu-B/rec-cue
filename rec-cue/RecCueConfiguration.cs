@@ -12,6 +12,7 @@ public class RecCueConfiguration : IPluginConfiguration
     public string MonitoredFolderPath { get; set; } = string.Empty;
     public float IndicatorScale { get; set; } = 1.0f;
     public Vector2 IndicatorPosition { get; set; } = new Vector2(300, 300);
+    public bool HideIndicator { get; set; } = false;
 
     // The below exists just to make saving less cumbersome
     public void Save()

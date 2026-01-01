@@ -117,6 +117,9 @@ public class RecIndicator : IDisposable
 
     public void Draw()
     {
+        if (plugin.Configuration.HideIndicator)
+            return;
+
         if (!IsInValidGameplayState())
             return;
 

@@ -58,6 +58,16 @@ public class RecCueConfigWindow : Window, IDisposable
 
         ImGui.Spacing();
 
+        ImGui.Text("Visibility:");
+        var hideIndicator = configuration.HideIndicator;
+        if (ImGui.Checkbox("Hide Indicator##HideIndicator", ref hideIndicator))
+        {
+            configuration.HideIndicator = hideIndicator;
+            configuration.Save();
+        }
+
+        ImGui.Spacing();
+
         if (ImGui.Button("Close"))
         {
             IsOpen = false;
