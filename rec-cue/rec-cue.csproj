@@ -10,5 +10,13 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Content
+        Include="rec-cue.png"
+        Link="images/icon.png"
+        CopyToOutputDirectory="PreserveNewest"
+        Visible="false"
+    />
+  </ItemGroup>
 
 </Project>
