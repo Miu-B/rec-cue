@@ -59,10 +59,7 @@ public class RecIndicator : IDisposable
 
     private bool IsFolderInError()
     {
-        if (string.IsNullOrEmpty(plugin.Configuration.MonitoredFolderPath))
-            return true;
-
-        return !System.IO.Directory.Exists(plugin.Configuration.MonitoredFolderPath);
+        return !plugin.Configuration.IsMonitoredFolderValid;
     }
 
     private static void DrawCornerAccents(ImDrawListPtr drawList, Vector2 winPos, Vector2 winSize, float rounding, float scale)

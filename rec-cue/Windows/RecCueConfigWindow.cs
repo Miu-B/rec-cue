@@ -21,7 +21,10 @@ public class RecCueConfigWindow : Window, IDisposable
         SizeCondition = ImGuiCond.FirstUseEver;
     }
 
-    public void Dispose() { }
+    public void Dispose()
+    {
+        _folderDialog = null;
+    }
 
     public override void Draw()
     {
@@ -41,7 +44,7 @@ public class RecCueConfigWindow : Window, IDisposable
             _folderDialog?.Show();
         }
 
-        if (!System.IO.Directory.Exists(configuration.MonitoredFolderPath))
+        if (!configuration.IsMonitoredFolderValid)
         {
             ImGui.TextColored(new Vector4(1.0f, 0.0f, 0.0f, 1.0f), "Warning: Folder does not exist!");
         }

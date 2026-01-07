@@ -110,8 +110,7 @@ public sealed class RecCuePlugin : IDalamudPlugin
     public void StartMonitoring()
     {
         FileWatcher.StopMonitoring();
-        if (!string.IsNullOrEmpty(Configuration.MonitoredFolderPath) &&
-            System.IO.Directory.Exists(Configuration.MonitoredFolderPath))
+        if (Configuration.IsMonitoredFolderValid)
         {
             FileWatcher.StartMonitoring(Configuration.MonitoredFolderPath);
         }
@@ -128,8 +127,6 @@ public sealed class RecCuePlugin : IDalamudPlugin
 
     private void EnsureRecIndicatorFont()
     {
-        // Your old code did: fontSize = GetFontSize() * 1.8f * scale;
-        // Here we bake that into the atlas so it stays crisp.
         var multiplier = 1.8f * Configuration.IndicatorScale;
 
         if (RecIndicatorFont != null && MathF.Abs(multiplier - _lastFontMultiplier) < 0.01f)
@@ -151,7 +148,6 @@ public sealed class RecCuePlugin : IDalamudPlugin
         }
         else
         {
-            // Fallback (should be rare): keep using default handle
             RecIndicatorFont = PluginInterface.UiBuilder.DefaultFontHandle;
             _ownsRecIndicatorFont = false;
         }

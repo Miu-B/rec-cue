@@ -1,5 +1,6 @@
 using Dalamud.Configuration;
 using System;
+using System.IO;
 using System.Numerics;
 
 namespace RecCue;
@@ -14,7 +15,8 @@ public class RecCueConfiguration : IPluginConfiguration
     public Vector2 IndicatorPosition { get; set; } = new Vector2(300, 300);
     public bool HideIndicator { get; set; } = false;
 
-    // The below exists just to make saving less cumbersome
+    public bool IsMonitoredFolderValid => !string.IsNullOrEmpty(MonitoredFolderPath) && Directory.Exists(MonitoredFolderPath);
+
     public void Save()
     {
         RecCuePlugin.PluginInterface.SavePluginConfig(this);

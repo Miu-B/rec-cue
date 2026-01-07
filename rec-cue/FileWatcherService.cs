@@ -11,12 +11,15 @@ public class FileWatcherService : IDisposable
     private string? _monitoredPath;
     private DateTime _lastCheckTime;
     private bool _isMonitoring;
+    private readonly object _stateLock = new object();
+    private DateTime _lastFileCountCheck;
+    private int _lastFileCount;
 
     public event Action? FileActivityDetected;
 
     public FileWatcherService()
     {
-        _pollTimer = new Timer(1000); // 1 second intervals
+        _pollTimer = new Timer(1000);
         _pollTimer.Elapsed += OnPollTimerElapsed;
         _pollTimer.AutoReset = true;
     }
@@ -26,49 +29,81 @@ public class FileWatcherService : IDisposable
         if (!Directory.Exists(path))
             return;
 
-        _monitoredPath = path;
-        _lastCheckTime = DateTime.Now;
-        _isMonitoring = true;
-        _pollTimer.Start();
+        lock (_stateLock)
+        {
+            _monitoredPath = path;
+            _lastCheckTime = DateTime.Now;
+            _lastFileCountCheck = DateTime.Now;
+            _lastFileCount = 0;
+            _isMonitoring = true;
+            _pollTimer.Start();
+        }
     }
 
     public void StopMonitoring()
     {
-        _isMonitoring = false;
-        _pollTimer.Stop();
+        lock (_stateLock)
+        {
+            _isMonitoring = false;
+            _pollTimer.Stop();
+        }
     }
 
     private void OnPollTimerElapsed(object? sender, ElapsedEventArgs e)
     {
-        if (!_isMonitoring || string.IsNullOrEmpty(_monitoredPath))
+        string? path;
+        bool isMonitoring;
+        DateTime lastCheck;
+
+        lock (_stateLock)
+        {
+            path = _monitoredPath;
+            isMonitoring = _isMonitoring;
+            lastCheck = _lastCheckTime;
+        }
+
+        if (!isMonitoring || string.IsNullOrEmpty(path))
             return;
 
         try
         {
-            // Check if any files in the directory (recursive) have been modified since last check
-            var files = Directory.EnumerateFiles(_monitoredPath, "*", SearchOption.AllDirectories);
-            var hasActivity = files.Any(file =>
+            var files = Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories).ToArray();
+            var hasActivity = false;
+
+            if (files.Length != _lastFileCount)
             {
-                try
+                hasActivity = true;
+            }
+            else
+            {
+                foreach (var file in files)
                 {
-                    return File.GetLastWriteTime(file) > _lastCheckTime;
+                    try
+                    {
+                        if (File.GetLastWriteTime(file) > lastCheck)
+                        {
+                            hasActivity = true;
+                            break;
+                        }
+                    }
+                    catch
+                    {
+                    }
                 }
-                catch
-                {
-                    // Ignore access errors
-                    return false;
-                }
-            });
+            }
 
             if (hasActivity)
             {
-                _lastCheckTime = DateTime.Now;
+                lock (_stateLock)
+                {
+                    _lastCheckTime = DateTime.Now;
+                    _lastFileCount = files.Length;
+                }
                 FileActivityDetected?.Invoke();
             }
         }
         catch
         {
-            // Ignore directory access errors
         }
     }
 

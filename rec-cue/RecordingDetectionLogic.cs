@@ -7,17 +7,30 @@ public class RecordingDetectionLogic : IDisposable
 {
     private readonly Timer _inactivityTimer;
     private bool _isRecordingActive;
+    private readonly object _stateLock = new object();
 
     public event Action<bool>? RecordingStateChanged;
 
     public bool IsRecordingActive
     {
-        get => _isRecordingActive;
+        get
+        {
+            lock (_stateLock)
+            {
+                return _isRecordingActive;
+            }
+        }
         private set
         {
-            if (_isRecordingActive != value)
+            bool changed;
+            lock (_stateLock)
             {
+                changed = _isRecordingActive != value;
                 _isRecordingActive = value;
+            }
+
+            if (changed)
+            {
                 RecordingStateChanged?.Invoke(_isRecordingActive);
             }
         }
@@ -25,9 +38,9 @@ public class RecordingDetectionLogic : IDisposable
 
     public RecordingDetectionLogic()
     {
-        _inactivityTimer = new Timer(3000); // 3 seconds
+        _inactivityTimer = new Timer(3000);
         _inactivityTimer.Elapsed += OnInactivityTimerElapsed;
-        _inactivityTimer.AutoReset = false; // One-shot
+        _inactivityTimer.AutoReset = false;
     }
 
     public void OnFileActivityDetected()
