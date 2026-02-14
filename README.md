@@ -2,54 +2,45 @@
 
 ![rec-cue icon](rec-cue/rec-cue.png)
 
-A Dalamud plugin that monitors a configurable folder for recording file activity and shows an in-game recording indicator when capture is likely active.
+A Dalamud plugin that monitors configurable folders for recording file activity and shows an in-game recording indicator when capture is likely active.
 
 ## Features
 
 * **File Activity Monitoring**
-  * Monitors a folder for file write/modification activity using FileSystemWatcher
+  * Monitors up to 5 folders simultaneously for file write/modification activity using FileSystemWatcher
   * Recursive monitoring of subdirectories
   * Automatic recovery on watcher errors
+  * Grace period for buffered writers (e.g. OBS) to prevent indicator flickering
 
 * **Visual Recording Indicator**
   * Always-visible on-screen indicator
-  * **Active** (Red pulsing dot): File activity detected within 3 seconds
-  * **OnHold** (Grey dot): No activity for 3+ seconds
-  * **Error** (Orange dot): No folder configured or folder doesn't exist
+  * **Active** (Red pulsing dot): File activity detected within 5 seconds
+  * **OnHold** (Grey dot): No activity for 5+ seconds
+  * **Error** (Orange dot): A configured folder path doesn't exist
   * Adjustable indicator position and scale (0.5x - 2.0x)
   * Auto-restart monitoring when folder error is resolved
 
 * **Simple Configuration**
+  * Multi-folder support with per-folder validation
   * Built-in folder picker dialog
   * Real-time validation
-  * Persistent configuration
+  * Persistent configuration with automatic migration
 
 ## Installation
 
 Rec-Cue is available in the official Dalamud plugin installer. Open the Plugin Installer in-game and search for **Rec-Cue**.
-
-### Alternative Installation (Custom Repository)
-
-You can also install from the custom plugin repository:
-
-URL: `https://raw.githubusercontent.com/Miu-B/rec-cue/master/repo.json`
-
-1. Open Dalamud Settings (`/xlsettings`)
-2. Go to the "Plugin Installer" tab
-3. Click "Add Custom Plugin Repository"
-4. Paste the URL above and click OK
-5. Find Rec-Cue in the plugin list and click "Install"
 
 ## How To Use
 
 ### Getting Started
 
 1. Open the configuration window using `/reccue` command
-2. Click "Browse..." to select a folder to monitor (e.g., your recording software's output folder)
-3. The indicator will appear on screen:
-   * **Red pulsing** = Recording in progress (file activity detected within 3 seconds)
+2. Click "Browse" to select a folder to monitor (e.g., your recording software's output folder)
+3. Add additional folders with "+ Add Folder" (up to 5)
+4. The indicator will appear on screen:
+   * **Red pulsing** = Recording in progress (file activity detected within 5 seconds)
    * **Grey** = No recording activity
-   * **Orange** = No folder configured or non existing
+   * **Orange** = A configured folder path doesn't exist
 
 ### Commands
 
@@ -68,7 +59,7 @@ URL: `https://raw.githubusercontent.com/Miu-B/rec-cue/master/repo.json`
 
 All settings are saved automatically:
 
-* **Monitored Folder** - Path to the folder being monitored for file activity
+* **Monitored Folders** - Up to 5 folder paths to monitor for file activity
 * **Indicator Scale** - Scale multiplier for the indicator (0.5x to 2.0x)
 * **Hide Indicator** - Toggle indicator visibility
 

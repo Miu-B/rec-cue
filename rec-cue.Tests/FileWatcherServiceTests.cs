@@ -188,7 +188,8 @@ public class FileWatcherServiceTests : IDisposable
     [Fact]
     public async Task PollingStops_WhenFileStopsGrowing()
     {
-        _watcher.PollIntervalMs = 500;
+        _watcher.PollIntervalMs = 200;
+        _watcher.MaxInactivityTicks = 3;
 
         var eventCount = 0;
         _watcher.FileActivityDetected += () => Interlocked.Increment(ref eventCount);
@@ -200,8 +201,9 @@ public class FileWatcherServiceTests : IDisposable
         var testFile = Path.Combine(_tempDir, "static.bin");
         await File.WriteAllBytesAsync(testFile, new byte[1024]);
 
-        // Wait for the initial event(s) plus one poll cycle where
-        // no file mtime has changed, causing the poll to stop.
+        // Wait for the initial event(s) plus enough poll cycles for
+        // MaxInactivityTicks to be reached (3 ticks * 200ms = 600ms).
+        // Add extra buffer for timing jitter.
         await Task.Delay(1500);
         var countAfterStabilize = Volatile.Read(ref eventCount);
 
@@ -211,6 +213,46 @@ public class FileWatcherServiceTests : IDisposable
         var countAfterWait = Volatile.Read(ref eventCount);
 
         Assert.Equal(countAfterStabilize, countAfterWait);
+    }
+
+    [Fact]
+    public async Task GracePeriod_SurvivesShortGapsBetweenWrites()
+    {
+        // Simulate OBS-like buffered writes: write, pause (within grace period), write again.
+        // The indicator should stay active throughout without the poll timer stopping.
+        _watcher.PollIntervalMs = 200;
+        _watcher.MaxInactivityTicks = 5; // Grace period = 5 * 200ms = 1000ms
+
+        var eventCount = 0;
+        _watcher.FileActivityDetected += () => Interlocked.Increment(ref eventCount);
+
+        _watcher.StartMonitoring(_tempDir);
+        await Task.Delay(200);
+
+        var testFile = Path.Combine(_tempDir, "buffered.bin");
+        await File.WriteAllBytesAsync(testFile, new byte[1024]);
+
+        // Wait for the initial event.
+        await Task.Delay(400);
+        var countAfterCreate = Volatile.Read(ref eventCount);
+        Assert.True(countAfterCreate >= 1, "Expected at least 1 event after file creation");
+
+        // Pause for 600ms (3 ticks) — within the grace period of 5 ticks.
+        // The poll timer should still be running.
+        await Task.Delay(600);
+
+        // Write again — this should be detected by the still-running poll timer.
+        using (var stream = new FileStream(testFile, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+        {
+            await stream.WriteAsync(new byte[1024]);
+        }
+
+        // Give time for the poll to detect the new write.
+        await Task.Delay(600);
+        var countAfterResume = Volatile.Read(ref eventCount);
+
+        Assert.True(countAfterResume > countAfterCreate,
+            $"Expected grace period to keep polling alive through a short gap. Before gap: {countAfterCreate}, after resume: {countAfterResume}");
     }
 
     [Fact]

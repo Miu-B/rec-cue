@@ -67,8 +67,8 @@ public class RecordingDetectionLogicTests : IDisposable
         _logic.OnFileActivityDetected();
         Assert.True(_logic.IsRecordingActive);
 
-        // Wait for the 3-second inactivity timeout plus a margin
-        await Task.Delay(4000);
+        // Wait for the 5-second inactivity timeout plus a margin
+        await Task.Delay(6000);
 
         Assert.False(_logic.IsRecordingActive);
         Assert.Equal(2, stateChanges.Count);
@@ -82,17 +82,17 @@ public class RecordingDetectionLogicTests : IDisposable
         _logic.OnFileActivityDetected();
         Assert.True(_logic.IsRecordingActive);
 
-        // Wait 2 seconds (within the 3s timeout), then trigger again
-        await Task.Delay(2000);
+        // Wait 3 seconds (within the 5s timeout), then trigger again
+        await Task.Delay(3000);
         _logic.OnFileActivityDetected();
         Assert.True(_logic.IsRecordingActive);
 
-        // Wait another 2 seconds -- should still be active because timer was reset
-        await Task.Delay(2000);
+        // Wait another 3 seconds -- should still be active because timer was reset
+        await Task.Delay(3000);
         Assert.True(_logic.IsRecordingActive);
 
         // Wait for the full timeout to expire
-        await Task.Delay(2000);
+        await Task.Delay(6000);
         Assert.False(_logic.IsRecordingActive);
     }
 }

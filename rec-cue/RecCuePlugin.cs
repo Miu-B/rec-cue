@@ -25,7 +25,7 @@ public sealed class RecCuePlugin : IDalamudPlugin
     public readonly WindowSystem WindowSystem = new("RecCue");
     internal RecCueConfigWindow ConfigWindow { get; init; }
     internal RecIndicator Indicator { get; init; }
-    public FileWatcherService FileWatcher { get; private set; } = null!;
+    public FileWatcherManager FileWatcherManager { get; private set; } = null!;
     public RecordingDetectionLogic RecordingLogic { get; private set; } = null!;
 
     // Crisp font for the indicator (resized default font)
@@ -36,11 +36,12 @@ public sealed class RecCuePlugin : IDalamudPlugin
     public RecCuePlugin()
     {
         Configuration = PluginInterface.GetPluginConfig() as RecCueConfiguration ?? new RecCueConfiguration();
+        Configuration.Migrate();
 
-        FileWatcher = new FileWatcherService();
+        FileWatcherManager = new FileWatcherManager();
         RecordingLogic = new RecordingDetectionLogic();
 
-        FileWatcher.FileActivityDetected += RecordingLogic.OnFileActivityDetected;
+        FileWatcherManager.FileActivityDetected += RecordingLogic.OnFileActivityDetected;
 
         ConfigWindow = new RecCueConfigWindow(this);
         Indicator = new RecIndicator(this, ClientState, Condition);
@@ -48,7 +49,7 @@ public sealed class RecCuePlugin : IDalamudPlugin
         // Create font handle for sharp indicator text
         EnsureRecIndicatorFont();
 
-        if (!string.IsNullOrEmpty(Configuration.MonitoredFolderPath))
+        if (Configuration.MonitoredFolderPaths.Count > 0)
             StartMonitoring();
 
         WindowSystem.AddWindow(ConfigWindow);
@@ -59,6 +60,7 @@ public sealed class RecCuePlugin : IDalamudPlugin
         });
 
         PluginInterface.UiBuilder.Draw += DrawUi;
+        PluginInterface.UiBuilder.OpenMainUi += ToggleConfigUi;
         PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
 
         Log.Information("===rec-cue plugin loaded successfully===");
@@ -67,6 +69,7 @@ public sealed class RecCuePlugin : IDalamudPlugin
     public void Dispose()
     {
         PluginInterface.UiBuilder.Draw -= DrawUi;
+        PluginInterface.UiBuilder.OpenMainUi -= ToggleConfigUi;
         PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUi;
 
         WindowSystem.RemoveAllWindows();
@@ -74,7 +77,7 @@ public sealed class RecCuePlugin : IDalamudPlugin
         ConfigWindow.Dispose();
         Indicator.Dispose();
 
-        FileWatcher.Dispose();
+        FileWatcherManager.Dispose();
         RecordingLogic.Dispose();
 
         CommandManager.RemoveHandler(CommandName);
@@ -109,11 +112,7 @@ public sealed class RecCuePlugin : IDalamudPlugin
 
     public void StartMonitoring()
     {
-        FileWatcher.StopMonitoring();
-        if (Configuration.IsMonitoredFolderValid)
-        {
-            FileWatcher.StartMonitoring(Configuration.MonitoredFolderPath);
-        }
+        FileWatcherManager.SyncWatchers(Configuration.MonitoredFolderPaths);
     }
 
     private void DrawUi()

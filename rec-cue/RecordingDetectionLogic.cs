@@ -38,7 +38,7 @@ public class RecordingDetectionLogic : IDisposable
 
     public RecordingDetectionLogic()
     {
-        _inactivityTimer = new Timer(3000);
+        _inactivityTimer = new Timer(5000);
         _inactivityTimer.Elapsed += OnInactivityTimerElapsed;
         _inactivityTimer.AutoReset = false;
     }

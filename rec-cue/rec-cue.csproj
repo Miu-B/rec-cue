@@ -4,7 +4,7 @@
     <RootNamespace>RecCue</RootNamespace>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>0.0.2.0</Version>
+    <Version>0.0.3.0</Version>
     <PackageProjectUrl>https://github.com/Miu-B/rec-cue</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
     <IsPackable>false</IsPackable>

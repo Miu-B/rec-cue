@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.3.0] - 2026-02-14
+
+### Added
+- Multi-folder monitoring: configure up to 5 folders simultaneously (e.g. Steam Game Recording + OBS output)
+- Config migration from single-folder (v0) to multi-folder (v1) format — existing configs upgrade automatically
+- `FileWatcherManager` class to orchestrate multiple `FileWatcherService` instances
+- Per-folder validation in the config window with individual error messages
+- Tests for `FileWatcherManager` and updated `RecCueConfiguration` tests
+
+### Fixed
+- OBS indicator flashing caused by buffered writes: added poll grace period (`MaxInactivityTicks = 5`) so the poll timer survives gaps between OBS buffer flushes, and increased the inactivity timeout from 3 to 5 seconds so the indicator stays lit between flushes
+
+### Changed
+- Config window redesigned with scrollable folder list, per-row Browse/Remove buttons, and Add Folder button
+- Orange warning indicator now shows when ANY configured non-empty folder path is invalid
+
 ## [0.0.2.0] - 2026-02-14
 
 ### Changed

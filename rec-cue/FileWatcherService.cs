@@ -17,12 +17,21 @@ public class FileWatcherService : IDisposable
     // file LastWriteTime values during polling.
     private DateTime _lastCheckTime;
     private int _lastFileCount;
+    private int _inactivityTicks;
 
     /// <summary>
     /// Interval in milliseconds between directory-scan poll checks.
     /// Exposed for testing.
     /// </summary>
     public double PollIntervalMs { get; set; } = 1000;
+
+    /// <summary>
+    /// Number of consecutive poll ticks with no detected activity before
+    /// the poll timer is stopped.  This grace period prevents the indicator
+    /// from flickering when recording software (e.g. OBS) writes in buffered
+    /// chunks with gaps between flushes.  Exposed for testing.
+    /// </summary>
+    public int MaxInactivityTicks { get; set; } = 5;
 
     public event Action? FileActivityDetected;
 
@@ -49,6 +58,7 @@ public class FileWatcherService : IDisposable
 
             _lastCheckTime = DateTime.UtcNow;
             _lastFileCount = 0;
+            _inactivityTicks = 0;
             _isMonitoring = true;
         }
     }
@@ -75,6 +85,7 @@ public class FileWatcherService : IDisposable
 
         _lastCheckTime = DateTime.MinValue;
         _lastFileCount = 0;
+        _inactivityTicks = 0;
 
         if (_watcher != null)
         {
@@ -95,6 +106,7 @@ public class FileWatcherService : IDisposable
                 return;
 
             _lastCheckTime = DateTime.UtcNow;
+            _inactivityTicks = 0;
             EnsurePollTimerRunning();
         }
 
@@ -178,18 +190,23 @@ public class FileWatcherService : IDisposable
                 {
                     _lastCheckTime = DateTime.UtcNow;
                     _lastFileCount = files.Length;
+                    _inactivityTicks = 0;
                 }
 
                 FileActivityDetected?.Invoke();
             }
             else
             {
-                // No activity detected — stop polling.
-                // The inactivity timer in RecordingDetectionLogic will
-                // handle turning off the indicator after its timeout.
+                // No activity detected — allow a grace period before stopping
+                // so that recording software with buffered writes (e.g. OBS)
+                // doesn't cause the indicator to flicker between flushes.
                 lock (_stateLock)
                 {
-                    _pollTimer?.Stop();
+                    _inactivityTicks++;
+                    if (_inactivityTicks >= MaxInactivityTicks)
+                    {
+                        _pollTimer?.Stop();
+                    }
                 }
             }
         }
