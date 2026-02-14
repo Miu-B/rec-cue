@@ -45,7 +45,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: rec-cue/bin/x64/Release/rec-cue/latest.zip
+          files: rec-cue/bin/**/latest.zip
           name: Rec-Cue ${{ github.ref_name }}
           body: |
             ## Installation
