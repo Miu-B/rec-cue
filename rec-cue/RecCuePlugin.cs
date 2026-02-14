@@ -60,7 +60,6 @@ public sealed class RecCuePlugin : IDalamudPlugin
         });
 
         PluginInterface.UiBuilder.Draw += DrawUi;
-        PluginInterface.UiBuilder.OpenMainUi += ToggleConfigUi;
         PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
 
         Log.Information("===rec-cue plugin loaded successfully===");
@@ -69,7 +68,6 @@ public sealed class RecCuePlugin : IDalamudPlugin
     public void Dispose()
     {
         PluginInterface.UiBuilder.Draw -= DrawUi;
-        PluginInterface.UiBuilder.OpenMainUi -= ToggleConfigUi;
         PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUi;
 
         WindowSystem.RemoveAllWindows();
