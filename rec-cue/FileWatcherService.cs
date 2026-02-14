@@ -1,28 +1,15 @@
 using System;
 using System.IO;
-using System.Linq;
-using System.Timers;
 
 namespace RecCue;
 
 public class FileWatcherService : IDisposable
 {
-    private readonly Timer _pollTimer;
-    private string? _monitoredPath;
-    private DateTime _lastCheckTime;
-    private bool _isMonitoring;
+    private FileSystemWatcher? _watcher;
     private readonly object _stateLock = new object();
-    private DateTime _lastFileCountCheck;
-    private int _lastFileCount;
+    private bool _isMonitoring;
 
     public event Action? FileActivityDetected;
-
-    public FileWatcherService()
-    {
-        _pollTimer = new Timer(1000);
-        _pollTimer.Elapsed += OnPollTimerElapsed;
-        _pollTimer.AutoReset = true;
-    }
 
     public void StartMonitoring(string path)
     {
@@ -31,12 +18,21 @@ public class FileWatcherService : IDisposable
 
         lock (_stateLock)
         {
-            _monitoredPath = path;
-            _lastCheckTime = DateTime.Now;
-            _lastFileCountCheck = DateTime.Now;
-            _lastFileCount = 0;
+            StopMonitoringInternal();
+
+            _watcher = new FileSystemWatcher(path)
+            {
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName,
+                IncludeSubdirectories = true,
+                Filter = "*",
+                EnableRaisingEvents = true,
+            };
+
+            _watcher.Changed += OnFileEvent;
+            _watcher.Created += OnFileEvent;
+            _watcher.Error += OnWatcherError;
+
             _isMonitoring = true;
-            _pollTimer.Start();
         }
     }
 
@@ -44,71 +40,57 @@ public class FileWatcherService : IDisposable
     {
         lock (_stateLock)
         {
-            _isMonitoring = false;
-            _pollTimer.Stop();
+            StopMonitoringInternal();
         }
     }
 
-    private void OnPollTimerElapsed(object? sender, ElapsedEventArgs e)
+    private void StopMonitoringInternal()
     {
-        string? path;
-        bool isMonitoring;
-        DateTime lastCheck;
+        _isMonitoring = false;
 
+        if (_watcher != null)
+        {
+            _watcher.EnableRaisingEvents = false;
+            _watcher.Changed -= OnFileEvent;
+            _watcher.Created -= OnFileEvent;
+            _watcher.Error -= OnWatcherError;
+            _watcher.Dispose();
+            _watcher = null;
+        }
+    }
+
+    private void OnFileEvent(object sender, FileSystemEventArgs e)
+    {
         lock (_stateLock)
         {
-            path = _monitoredPath;
-            isMonitoring = _isMonitoring;
-            lastCheck = _lastCheckTime;
+            if (!_isMonitoring)
+                return;
         }
 
-        if (!isMonitoring || string.IsNullOrEmpty(path))
-            return;
+        FileActivityDetected?.Invoke();
+    }
 
-        try
+    private void OnWatcherError(object sender, ErrorEventArgs e)
+    {
+        // Attempt to recover by restarting the watcher on the same path.
+        string? path;
+        lock (_stateLock)
         {
-            var files = Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories).ToArray();
-            var hasActivity = false;
-
-            if (files.Length != _lastFileCount)
-            {
-                hasActivity = true;
-            }
-            else
-            {
-                foreach (var file in files)
-                {
-                    try
-                    {
-                        if (File.GetLastWriteTime(file) > lastCheck)
-                        {
-                            hasActivity = true;
-                            break;
-                        }
-                    }
-                    catch
-                    {
-                    }
-                }
-            }
-
-            if (hasActivity)
-            {
-                lock (_stateLock)
-                {
-                    _lastCheckTime = DateTime.Now;
-                    _lastFileCount = files.Length;
-                }
-                FileActivityDetected?.Invoke();
-            }
+            path = _watcher?.Path;
+            StopMonitoringInternal();
         }
-        catch
+
+        if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
         {
+            StartMonitoring(path);
         }
     }
 
     public void Dispose()
     {
-        _pollTimer.Dispose();
+        lock (_stateLock)
+        {
+            StopMonitoringInternal();
+        }
     }
 }

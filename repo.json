@@ -13,7 +13,7 @@
         "IsTestingExclusive": "False",
         "DownloadCount": 0,
         "LastUpdate": 0,
-        "LoadPriority": 42,
+        "LoadPriority": 0,
         "DownloadLinkInstall": "https://github.com/Miu-B/rec-cue/releases/download/0.0.1.1/latest.zip",
         "DownloadLinkTesting": "https://github.com/Miu-B/rec-cue/releases/download/0.0.1.1/latest.zip",
         "DownloadLinkUpdate": "https://github.com/Miu-B/rec-cue/releases/download/0.0.1.1/latest.zip",

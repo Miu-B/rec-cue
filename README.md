@@ -7,14 +7,14 @@ A Dalamud plugin that monitors a configurable folder for recording file activity
 ## Features
 
 * **File Activity Monitoring**
-  * Monitors a folder for file write/modification activity
+  * Monitors a folder for file write/modification activity using FileSystemWatcher
   * Recursive monitoring of subdirectories
-  * Adjustable inactivity timeout (default: 5 seconds)
+  * Automatic recovery on watcher errors
 
 * **Visual Recording Indicator**
   * Always-visible on-screen indicator
-  * **Active** (Red pulsing dot): File activity detected within 5 seconds
-  * **OnHold** (Grey dot): No activity for 5+ seconds
+  * **Active** (Red pulsing dot): File activity detected within 3 seconds
+  * **OnHold** (Grey dot): No activity for 3+ seconds
   * **Error** (Orange dot): No folder configured or folder doesn't exist
   * Adjustable indicator position and scale (0.5x - 2.0x)
   * Auto-restart monitoring when folder error is resolved
@@ -26,11 +26,14 @@ A Dalamud plugin that monitors a configurable folder for recording file activity
 
 ## Installation
 
-Rec-Cue is not yet available in the standard Dalamud plugin repository and must be installed from a third-party repository.
+Rec-Cue is available in the official Dalamud plugin installer. Open the Plugin Installer in-game and search for **Rec-Cue**.
 
-Here is the URL for the plugin repository: `https://raw.githubusercontent.com/Miu-B/rec-cue/master/repo.json`
+### Alternative Installation (Custom Repository)
 
-To install:
+You can also install from the custom plugin repository:
+
+URL: `https://raw.githubusercontent.com/Miu-B/rec-cue/master/repo.json`
+
 1. Open Dalamud Settings (`/xlsettings`)
 2. Go to the "Plugin Installer" tab
 3. Click "Add Custom Plugin Repository"
@@ -41,13 +44,18 @@ To install:
 
 ### Getting Started
 
-1. Build the plugin and load it in Dalamud
-2. Open the configuration window using `/reccue` command
-3. Click "Browse..." to select a folder to monitor (e.g., your recording software's output folder)
-4. The indicator will appear on screen:
-   * **Red pulsing** = Recording in progress (file activity detected within 5 seconds)
+1. Open the configuration window using `/reccue` command
+2. Click "Browse..." to select a folder to monitor (e.g., your recording software's output folder)
+3. The indicator will appear on screen:
+   * **Red pulsing** = Recording in progress (file activity detected within 3 seconds)
    * **Grey** = No recording activity
    * **Orange** = No folder configured or non existing
+
+### Commands
+
+* `/reccue` - Toggle the configuration window
+* `/reccue show` - Show the indicator
+* `/reccue hide` - Hide the indicator
 
 ### Adjusting Indicator
 
@@ -56,20 +64,35 @@ To install:
 3. Use the "Indicator Scale" slider to adjust size
 4. Position is saved automatically when you finish dragging
 
-### Loading in Dalamud
-
-1. Launch the game and use `/xlsettings` to open Dalamud settings
-2. Go to `Experimental` and add the full path to `rec-cue.dll` to Dev Plugin Locations
-3. Use `/xlplugins` to open the Plugin Installer
-4. Go to `Dev Tools > Installed Dev Plugins` and enable rec-cue
-5. Use `/reccue` to open the configuration window
-
 ## Configuration
 
 All settings are saved automatically:
 
 * **Monitored Folder** - Path to the folder being monitored for file activity
 * **Indicator Scale** - Scale multiplier for the indicator (0.5x to 2.0x)
+* **Hide Indicator** - Toggle indicator visibility
+
+## Development
+
+### Building
+
+```bash
+dotnet build --configuration Release
+```
+
+### Running Tests
+
+```bash
+dotnet test
+```
+
+### Loading in Dalamud (Dev)
+
+1. Launch the game and use `/xlsettings` to open Dalamud settings
+2. Go to `Experimental` and add the full path to `rec-cue.dll` to Dev Plugin Locations
+3. Use `/xlplugins` to open the Plugin Installer
+4. Go to `Dev Tools > Installed Dev Plugins` and enable rec-cue
+5. Use `/reccue` to open the configuration window
 
 ## License
 
