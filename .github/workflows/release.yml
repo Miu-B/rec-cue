@@ -33,32 +33,11 @@ jobs:
       - name: Build Release
         run: dotnet build --no-restore --verbosity normal --configuration Release -p:Version=${{ github.ref_name }}
 
-      - name: Write out repo.json
-        run: |
-          $ver = '${{ github.ref_name }}'
-          $path = './base_repo.json'
-          $new_path = './repo.json'
-          $content = get-content -path $path
-          $content = $content -replace '1.0.0.0',$ver
-          set-content -Path $new_path -Value $content
-
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           files: rec-cue/bin/**/latest.zip
           name: Rec-Cue ${{ github.ref_name }}
-          body: |
-            ## Installation
-            Add this repository URL to Dalamud Plugin Installer:
-            `https://raw.githubusercontent.com/Miu-B/rec-cue/master/repo.json`
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Commit repo.json
-        run: |
-          git config --global user.name "Actions User"
-          git config --global user.email "actions@github.com"
-          git fetch origin master && git checkout master
-          git add repo.json
-          git commit -m "[CI] Updating repo.json for ${{ github.ref_name }}" || true
-          git push origin master || true
